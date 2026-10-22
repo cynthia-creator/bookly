@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import type { Service } from "@/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { BookingForm } from "@/components/BookingForm";
 import {
   getMockBookings,
   getNextDays,
@@ -25,9 +26,21 @@ export function BookingPicker({ service }: { service: Service }) {
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [step, setStep] = useState<"pick" | "details">("pick");
 
   if (!today) {
     return <p className="mt-10 text-sm text-gray-500">Loading availability…</p>;
+  }
+
+  if (step === "details" && selectedDate && selectedTime) {
+    return (
+      <BookingForm
+        service={service}
+        date={selectedDate}
+        time={selectedTime}
+        onBack={() => setStep("pick")}
+      />
+    );
   }
 
   const days = getNextDays(today);
@@ -97,7 +110,12 @@ export function BookingPicker({ service }: { service: Service }) {
             ? `${service.name} on ${selectedDate} at ${selectedTime}`
             : "Select a date and time to continue"}
         </p>
-        <Button disabled={!selectedDate || !selectedTime}>Continue</Button>
+        <Button
+          disabled={!selectedDate || !selectedTime}
+          onClick={() => setStep("details")}
+        >
+          Continue
+        </Button>
       </div>
     </section>
   );
