@@ -16,7 +16,10 @@ interface BookingFormProps {
 }
 
 const inputClass =
-  "mt-1 w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 aria-[invalid=true]:border-red-500";
+  "mt-2 w-full rounded-xl border-[1.5px] border-line bg-background px-4 py-3 text-sm text-ink placeholder:text-muted/60 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-brand/20 aria-[invalid=true]:border-red-500 aria-[invalid=true]:focus:ring-red-500/20";
+
+const labelClass = "text-sm font-semibold text-ink";
+const errorClass = "mt-1.5 text-sm text-red-600 dark:text-red-400";
 
 export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
   const [confirmed, setConfirmed] = useState<BookingFormValues | null>(null);
@@ -76,13 +79,22 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
 
   if (confirmed) {
     return (
-      <section className="mt-10 rounded-xl border border-green-200 bg-green-50 p-6">
-        <h2 className="text-xl font-semibold text-green-800">Booking confirmed 🎉</h2>
-        <p className="mt-2 text-sm text-green-900">
+      <section className="mt-10 rounded-3xl border border-line bg-surface p-8 text-center shadow-[0_10px_40px_-12px_rgba(109,74,255,0.25)]">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-500 text-3xl text-white shadow-lg shadow-emerald-500/30">
+          ✓
+        </div>
+        <h2 className="mt-5 text-3xl font-extrabold tracking-tight">
+          You’re{" "}
+          <em className="bg-gradient-to-br from-brand to-[#ff6b8a] bg-clip-text pr-1 font-serif font-normal text-transparent">
+            booked!
+          </em>
+        </h2>
+        <p className="mt-3 text-muted">
           Thanks, {confirmed.customerName}. Your {service.name} is booked for{" "}
-          <strong>{prettyDate}</strong> at <strong>{time}</strong>.
+          <strong className="text-ink">{prettyDate}</strong> at{" "}
+          <strong className="text-ink">{time}</strong>.
         </p>
-        <p className="mt-1 text-sm text-green-900">
+        <p className="mt-1 text-sm text-muted">
           We’ll use {confirmed.customerEmail} for your appointment details.
         </p>
       </section>
@@ -90,77 +102,86 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
   }
 
   return (
-    <section className="mt-10">
-      <h2 className="text-xl font-semibold">3. Your details</h2>
+    <section className="mt-10 rounded-3xl border border-line bg-surface p-6 shadow-[0_10px_40px_-12px_rgba(109,74,255,0.25)] sm:p-8">
+      <h2 className="flex items-center gap-3 text-lg font-bold tracking-tight">
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-brand to-[#ff6b8a] text-xs font-bold text-white">
+          3
+        </span>
+        Your details
+      </h2>
 
-      <div className="mt-4 rounded-xl bg-gray-50 p-4 text-sm">
-        <p className="font-medium">{service.name}</p>
-        <p className="text-gray-600">
+      <div className="mt-5 rounded-2xl bg-brand-soft p-5 text-sm">
+        <p className="text-base font-bold">{service.name}</p>
+        <p className="mt-1 text-muted">
           {prettyDate} at {time} · {service.durationMinutes} min · ${service.price}
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 space-y-5">
         {submitError && (
-          <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+          <p
+            className="rounded-2xl border border-red-300/60 bg-red-500/10 p-4 text-sm text-red-600 dark:text-red-400"
+            role="alert"
+          >
             {submitError}
           </p>
         )}
         <div>
-          <label htmlFor="customerName" className="text-sm font-medium">
+          <label htmlFor="customerName" className={labelClass}>
             Full name
           </label>
           <input
             id="customerName"
             type="text"
             autoComplete="name"
+            placeholder="Jane Doe"
             aria-invalid={!!errors.customerName}
             className={inputClass}
             {...register("customerName")}
           />
           {errors.customerName && (
-            <p className="mt-1 text-sm text-red-600">{errors.customerName.message}</p>
+            <p className={errorClass}>{errors.customerName.message}</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="customerEmail" className="text-sm font-medium">
+          <label htmlFor="customerEmail" className={labelClass}>
             Email
           </label>
           <input
             id="customerEmail"
             type="email"
             autoComplete="email"
+            placeholder="jane@email.com"
             aria-invalid={!!errors.customerEmail}
             className={inputClass}
             {...register("customerEmail")}
           />
           {errors.customerEmail && (
-            <p className="mt-1 text-sm text-red-600">{errors.customerEmail.message}</p>
+            <p className={errorClass}>{errors.customerEmail.message}</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="notes" className="text-sm font-medium">
-            Notes <span className="text-gray-400">(optional)</span>
+          <label htmlFor="notes" className={labelClass}>
+            Notes <span className="font-normal text-muted">(optional)</span>
           </label>
           <textarea
             id="notes"
             rows={3}
+            placeholder="Anything we should know?"
             aria-invalid={!!errors.notes}
             className={inputClass}
             {...register("notes")}
           />
-          {errors.notes && (
-            <p className="mt-1 text-sm text-red-600">{errors.notes.message}</p>
-          )}
+          {errors.notes && <p className={errorClass}>{errors.notes.message}</p>}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 pt-2">
           <Button type="button" variant="secondary" onClick={onBack}>
-            Back
+            ← Back
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting} className="flex-1 sm:flex-none">
             {isSubmitting ? "Confirming…" : "Confirm booking"}
           </Button>
         </div>

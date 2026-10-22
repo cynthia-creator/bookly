@@ -14,6 +14,17 @@ import { availabilityResponseSchema } from "@/lib/validation";
 
 const subscribe = () => () => {};
 
+function StepHeading({ n, children }: { n: number; children: React.ReactNode }) {
+  return (
+    <h2 className="flex items-center gap-3 text-lg font-bold tracking-tight">
+      <span className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-brand to-[#ff6b8a] text-xs font-bold text-white">
+        {n}
+      </span>
+      {children}
+    </h2>
+  );
+}
+
 export function BookingPicker({ service }: { service: Service }) {
   // Reads today's date in the browser only. Returns "" on the server,
   // which avoids hydration errors from server/browser time differences.
@@ -81,7 +92,7 @@ export function BookingPicker({ service }: { service: Service }) {
   }, [availabilityRequest, selectedDate, service.id]);
 
   if (!today) {
-    return <p className="mt-10 text-sm text-gray-500">Loading availability…</p>;
+    return <p className="mt-10 text-sm text-muted">Loading availability…</p>;
   }
 
   if (step === "details" && selectedDate && selectedTime) {
@@ -102,9 +113,9 @@ export function BookingPicker({ service }: { service: Service }) {
     selectedDate !== null && availability?.date !== selectedDate && !availabilityError;
 
   return (
-    <section className="mt-10">
-      <h2 className="text-xl font-semibold">1. Pick a date</h2>
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+    <section className="mt-10 rounded-3xl border border-line bg-surface p-6 shadow-[0_10px_40px_-12px_rgba(109,74,255,0.25)] sm:p-8">
+      <StepHeading n={1}>Pick a date</StepHeading>
+      <div className="mt-5 flex gap-3 overflow-x-auto pb-3">
         {days.map((iso) => {
           const d = parseISODate(iso);
           const isSelected = iso === selectedDate;
@@ -112,23 +123,31 @@ export function BookingPicker({ service }: { service: Service }) {
             <button
               key={iso}
               type="button"
+              aria-pressed={isSelected}
               onClick={() => {
                 setSelectedDate(iso);
                 setSelectedTime(null);
                 setAvailabilityError(null);
               }}
               className={cn(
-                "w-16 shrink-0 rounded-lg border p-2 text-center transition-colors",
+                "w-[68px] shrink-0 rounded-2xl border-[1.5px] px-1 py-3 text-center transition duration-200",
                 isSelected
-                  ? "border-indigo-600 bg-indigo-600 text-white"
-                  : "hover:border-indigo-400"
+                  ? "border-transparent bg-gradient-to-br from-brand to-[#ff6b8a] text-white shadow-lg shadow-brand/30"
+                  : "border-line hover:-translate-y-0.5 hover:border-brand"
               )}
             >
-              <span className="block text-xs uppercase">
+              <span
+                className={cn(
+                  "block text-[11px] font-semibold uppercase tracking-wider",
+                  isSelected ? "text-white/80" : "text-muted"
+                )}
+              >
                 {d.toLocaleDateString("en-GB", { weekday: "short" })}
               </span>
-              <span className="block text-lg font-semibold">{d.getDate()}</span>
-              <span className="block text-xs">
+              <span className="block text-xl font-extrabold">{d.getDate()}</span>
+              <span
+                className={cn("block text-xs", isSelected ? "text-white/80" : "text-muted")}
+              >
                 {d.toLocaleDateString("en-GB", { month: "short" })}
               </span>
             </button>
@@ -137,18 +156,21 @@ export function BookingPicker({ service }: { service: Service }) {
       </div>
 
       {selectedDate && (
-        <>
-          <h2 className="mt-8 text-xl font-semibold">2. Pick a time</h2>
+        <div className="mt-8">
+          <StepHeading n={2}>Pick a time</StepHeading>
           {isLoadingAvailability ? (
-            <p className="mt-4 text-sm text-gray-500" role="status">
+            <p className="mt-4 text-sm text-muted" role="status">
               Loading available times…
             </p>
           ) : availabilityError ? (
-            <div className="mt-4" role="alert">
-              <p className="text-sm text-red-600">{availabilityError}</p>
+            <div
+              className="mt-4 rounded-2xl border border-red-300/60 bg-red-500/10 p-4"
+              role="alert"
+            >
+              <p className="text-sm text-red-600 dark:text-red-400">{availabilityError}</p>
               <button
                 type="button"
-                className="mt-2 text-sm font-medium text-indigo-600 hover:underline"
+                className="mt-2 text-sm font-semibold text-brand hover:underline"
                 onClick={() => {
                   setAvailabilityError(null);
                   setAvailabilityRequest((request) => request + 1);
@@ -158,18 +180,23 @@ export function BookingPicker({ service }: { service: Service }) {
               </button>
             </div>
           ) : (
-            <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+            <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4">
               {slots.map(({ time, available }) => (
                 <button
                   key={time}
                   type="button"
                   disabled={!available}
+                  aria-pressed={time === selectedTime}
                   onClick={() => setSelectedTime(time)}
                   className={cn(
-                    "rounded-lg border px-3 py-2 text-sm transition-colors",
-                    !available && "cursor-not-allowed bg-gray-100 text-gray-400 line-through",
-                    available && time !== selectedTime && "hover:border-indigo-400",
-                    time === selectedTime && "border-indigo-600 bg-indigo-600 text-white"
+                    "rounded-xl border-[1.5px] px-3 py-3 text-sm font-semibold transition",
+                    !available &&
+                      "cursor-not-allowed border-line text-muted line-through opacity-40",
+                    available &&
+                      time !== selectedTime &&
+                      "border-line hover:border-brand hover:text-brand",
+                    time === selectedTime &&
+                      "border-brand bg-brand text-white shadow-md shadow-brand/30"
                   )}
                 >
                   {time}
@@ -177,14 +204,19 @@ export function BookingPicker({ service }: { service: Service }) {
               ))}
             </div>
           )}
-        </>
+        </div>
       )}
 
-      <div className="mt-8 flex items-center justify-between rounded-xl border p-4">
-        <p className="text-sm text-gray-600">
-          {selectedDate && selectedTime
-            ? `${service.name} on ${selectedDate} at ${selectedTime}`
-            : "Select a date and time to continue"}
+      <div className="mt-8 flex flex-col gap-4 rounded-2xl bg-brand-soft p-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm font-medium text-ink">
+          {selectedDate && selectedTime ? (
+            <>
+              <span className="font-bold">{service.name}</span> on {selectedDate} at{" "}
+              {selectedTime}
+            </>
+          ) : (
+            <span className="text-muted">Select a date and time to continue</span>
+          )}
         </p>
         <Button
           disabled={!selectedDate || !selectedTime || isLoadingAvailability || !!availabilityError}
