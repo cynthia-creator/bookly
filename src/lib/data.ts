@@ -18,3 +18,6 @@ export const services: Service[] = [
     image: "/images/beard.jpg",
   },
 ];
+export function getServiceById(id: string) {
+  return services.find((service) => service.id === id);
+}

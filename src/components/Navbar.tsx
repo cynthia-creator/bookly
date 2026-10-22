@@ -12,7 +12,7 @@ export function Navbar() {
             <Link href="/" className="hover:text-indigo-600">Home</Link>
           </li>
           <li>
-            <Link href="/#services" className="hover:text-indigo-600">Services</Link>
+           <Link href="/services" className="hover:text-indigo-600">Services</Link>
           </li>
         </ul>
       </nav>

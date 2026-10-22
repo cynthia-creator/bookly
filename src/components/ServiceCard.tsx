@@ -1,5 +1,5 @@
+import Link from "next/link";
 import { Service } from "@/types";
-import { Button } from "@/components/ui/Button";
 
 export function ServiceCard({ service }: { service: Service }) {
   return (
@@ -12,7 +12,12 @@ export function ServiceCard({ service }: { service: Service }) {
         <p className="font-medium">
           ${service.price} · {service.durationMinutes} min
         </p>
-        <Button>Book now</Button>
+        <Link
+          href={`/services/${service.id}`}
+          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+        >
+          View details
+        </Link>
       </div>
     </li>
   );
