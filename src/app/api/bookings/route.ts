@@ -1,5 +1,6 @@
 import { getServiceById } from "@/lib/data";
 import { DatabaseConfigurationError, getDatabase } from "@/lib/db";
+import { sendBookingConfirmation } from "@/lib/email";
 import { getNextDays, getSlots, toISODate } from "@/lib/slots";
 import { createBookingSchema } from "@/lib/validation";
 
@@ -86,6 +87,21 @@ export async function POST(request: Request) {
       )
       RETURNING id::text AS id
     `;
+
+    // The booking is already saved, so an email problem must never fail it.
+    try {
+      await sendBookingConfirmation({
+        to: customerEmail,
+        customerName,
+        serviceName: service.name,
+        date,
+        time,
+        durationMinutes: service.durationMinutes,
+        price: service.price,
+      });
+    } catch (emailError) {
+      console.error("Could not send confirmation email.", emailError);
+    }
 
     return Response.json({ id: booking.id }, { status: 201 });
   } catch (error) {

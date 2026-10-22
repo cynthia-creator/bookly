@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { NavLinks } from "@/components/NavLinks";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Navbar() {
   return (
@@ -15,28 +17,13 @@ export function Navbar() {
           Bookly
         </Link>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
           <span className="hidden rounded-full border border-line bg-surface px-4 py-2 text-[13px] font-semibold text-muted lg:inline-block">
             Open Mon–Sat · 09:00–17:00
           </span>
 
-          <ul className="flex items-center gap-2 text-sm font-semibold sm:gap-4">
-            <li>
-              <Link
-                href="/"
-                className="rounded-full px-3 py-2 text-muted transition hover:bg-brand-soft hover:text-brand"
-              >
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/services"
-                className="rounded-full px-3 py-2 text-muted transition hover:bg-brand-soft hover:text-brand"
-              >
-                Services
-              </Link>
-            </li>
+          <ul className="flex items-center gap-1 text-sm font-semibold sm:gap-2">
+            <NavLinks />
             <li>
               <Link
                 href="/services"
@@ -46,6 +33,8 @@ export function Navbar() {
               </Link>
             </li>
           </ul>
+
+          <ThemeToggle />
         </div>
       </nav>
     </header>
