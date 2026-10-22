@@ -20,6 +20,7 @@ const inputClass =
 
 export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
   const [confirmed, setConfirmed] = useState<BookingFormValues | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -38,9 +39,39 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
   });
 
   async function onSubmit(values: BookingFormValues) {
-    // Fake delay for now. In Step 7 this becomes a real API call.
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setConfirmed(values);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...values,
+          serviceId: service.id,
+          date,
+          time,
+        }),
+      });
+      const result: unknown = await response.json();
+      if (!response.ok) {
+        const message =
+          typeof result === "object" &&
+          result !== null &&
+          "error" in result &&
+          typeof result.error === "string"
+            ? result.error
+            : "Could not create your booking. Please try again.";
+        throw new Error(message);
+      }
+
+      setConfirmed(values);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "Could not create your booking. Please try again."
+      );
+    }
   }
 
   if (confirmed) {
@@ -52,7 +83,7 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
           <strong>{prettyDate}</strong> at <strong>{time}</strong>.
         </p>
         <p className="mt-1 text-sm text-green-900">
-          A confirmation will be sent to {confirmed.customerEmail}.
+          We’ll use {confirmed.customerEmail} for your appointment details.
         </p>
       </section>
     );
@@ -70,6 +101,11 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="mt-6 space-y-5">
+        {submitError && (
+          <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">
+            {submitError}
+          </p>
+        )}
         <div>
           <label htmlFor="customerName" className="text-sm font-medium">
             Full name

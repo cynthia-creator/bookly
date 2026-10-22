@@ -4,11 +4,19 @@ import { getServiceById } from "@/lib/data";
 const OPENING_MINUTES = 9 * 60; // 09:00
 const CLOSING_MINUTES = 17 * 60; // 17:00
 const SLOT_STEP = 30; // a new slot every 30 minutes
+const BOOKING_UTC_OFFSET_MINUTES = 120;
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export function toISODate(date: Date): string {
+function formatCalendarDate(date: Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export function toISODate(date: Date): string {
+  const bookingDate = new Date(date.getTime() + BOOKING_UTC_OFFSET_MINUTES * 60_000);
+  return `${bookingDate.getUTCFullYear()}-${pad(bookingDate.getUTCMonth() + 1)}-${pad(
+    bookingDate.getUTCDate()
+  )}`;
 }
 
 export function parseISODate(iso: string): Date {
@@ -29,7 +37,7 @@ export function getNextDays(todayISO: string, count = 14): string[] {
   const days: string[] = [];
   for (let i = 0; i < count; i++) {
     const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
-    if (day.getDay() !== 0) days.push(toISODate(day));
+    if (day.getDay() !== 0) days.push(formatCalendarDate(day));
   }
   return days;
 }
@@ -39,21 +47,27 @@ export interface Slot {
   available: boolean;
 }
 
+type BookingOccupancy = Pick<Booking, "serviceId" | "date" | "time"> & {
+  durationMinutes?: number;
+};
+
 export function getSlots(
   service: Service,
   dateISO: string,
-  bookings: Booking[],
+  bookings: BookingOccupancy[],
   now: Date
 ): Slot[] {
   const isToday = dateISO === toISODate(now);
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const bookingNow = new Date(now.getTime() + BOOKING_UTC_OFFSET_MINUTES * 60_000);
+  const nowMinutes = bookingNow.getUTCHours() * 60 + bookingNow.getUTCMinutes();
 
   // Turn existing bookings for that day into time ranges
   const taken = bookings
     .filter((b) => b.date === dateISO)
     .map((b) => {
       const start = toMinutes(b.time);
-      const duration = getServiceById(b.serviceId)?.durationMinutes ?? SLOT_STEP;
+      const duration =
+        b.durationMinutes ?? getServiceById(b.serviceId)?.durationMinutes ?? SLOT_STEP;
       return { start, end: start + duration };
     });
 
@@ -69,20 +83,4 @@ export function getSlots(
     slots.push({ time: toTime(start), available: !inThePast && !overlaps });
   }
   return slots;
-}
-
-// Temporary fake bookings so you can see blocked slots.
-// In Step 7 this gets replaced by a real database.
-export function getMockBookings(todayISO: string): Booking[] {
-  const inDays = (n: number) => {
-    const d = parseISODate(todayISO);
-    d.setDate(d.getDate() + n);
-    return toISODate(d);
-  };
-
-  return [
-    { id: "b1", serviceId: "classic-haircut", customerName: "Sam", customerEmail: "sam@example.com", date: inDays(1), time: "10:00" },
-    { id: "b2", serviceId: "beard-trim", customerName: "Lee", customerEmail: "lee@example.com", date: inDays(1), time: "11:30" },
-    { id: "b3", serviceId: "classic-haircut", customerName: "Ayesha", customerEmail: "ayesha@example.com", date: inDays(2), time: "09:00" },
-  ];
 }

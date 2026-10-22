@@ -2,6 +2,19 @@
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Booking backend setup
+
+Bookings and availability use Neon Postgres. Before accepting bookings:
+
+1. Create a Neon database and copy its pooled connection string.
+2. In the Neon SQL Editor, run the SQL in [`database/schema.sql`](./database/schema.sql).
+3. Add `DATABASE_URL=<your Neon connection string>` to `.env.local` for local development. Add the same variable to the Vercel project for Production, Preview, and Development.
+4. Restart the local server or redeploy the Vercel project.
+
+Do not commit `.env.local` or expose the connection string in client-side code. Booking routes return a configuration error until `DATABASE_URL` is set and the schema has been applied.
+
+The public endpoints are `GET /api/availability?serviceId=<id>&date=YYYY-MM-DD` and `POST /api/bookings`. Booking times are fixed at UTC+02:00 year-round; the shop is open 09:00–17:00 and closed Sundays. The database prevents overlapping appointments. Email confirmations are not sent yet.
+
 ## Getting Started
 
 First, run the development server:
