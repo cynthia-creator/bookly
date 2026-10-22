@@ -13,7 +13,13 @@ Bookings and availability use Neon Postgres. Before accepting bookings:
 
 Do not commit `.env.local` or expose the connection string in client-side code. Booking routes return a configuration error until `DATABASE_URL` is set and the schema has been applied.
 
-The public endpoints are `GET /api/availability?serviceId=<id>&date=YYYY-MM-DD` and `POST /api/bookings`. Booking times are fixed at UTC+02:00 year-round; the shop is open 09:00–17:00 and closed Sundays. The database prevents overlapping appointments. Email confirmations are not sent yet.
+The public endpoints are `GET /api/availability?serviceId=<id>&date=YYYY-MM-DD` and `POST /api/bookings`. Booking times are fixed at UTC+02:00 year-round; the shop is open 09:00–17:00 and closed Sundays. The database prevents overlapping appointments. Booking confirmation emails use Resend when configured.
+
+### Resend email confirmations
+
+For a temporary test, set `RESEND_API_KEY` as a Vercel Production Secret, set `EMAIL_FROM` to `Bookly <onboarding@resend.dev>`, and set `RESEND_TEST_TO` to the email address verified on your Resend account. Resend's test sender only delivers to that account inbox; it does not send confirmations to customers.
+
+To send confirmations to customers, verify a domain you own in Resend, change `EMAIL_FROM` to an address on that verified domain, and remove `RESEND_TEST_TO` from Vercel Production. Keep `RESEND_API_KEY` server-side and never add a `NEXT_PUBLIC_` prefix.
 
 ## Getting Started
 

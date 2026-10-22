@@ -89,8 +89,9 @@ export async function POST(request: Request) {
     `;
 
     // The booking is already saved, so an email problem must never fail it.
+    let confirmationEmail: "sent" | "test" | "failed" = "failed";
     try {
-      await sendBookingConfirmation({
+      const emailMode = await sendBookingConfirmation({
         to: customerEmail,
         customerName,
         serviceName: service.name,
@@ -99,11 +100,12 @@ export async function POST(request: Request) {
         durationMinutes: service.durationMinutes,
         price: service.price,
       });
+      confirmationEmail = emailMode === "test" ? "test" : "sent";
     } catch (emailError) {
       console.error("Could not send confirmation email.", emailError);
     }
 
-    return Response.json({ id: booking.id }, { status: 201 });
+    return Response.json({ id: booking.id, confirmationEmail }, { status: 201 });
   } catch (error) {
     if (isOverlapViolation(error)) {
       return Response.json({ error: "That time was just booked. Please choose another slot." }, { status: 409 });

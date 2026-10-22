@@ -39,3 +39,8 @@ export const availabilityResponseSchema = z.object({
     })
   ),
 });
+
+export const bookingResponseSchema = z.object({
+  id: z.string().min(1),
+  confirmationEmail: z.enum(["sent", "test", "failed"]),
+});

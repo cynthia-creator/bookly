@@ -6,7 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { Service } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { parseISODate } from "@/lib/slots";
-import { bookingFormSchema, type BookingFormValues } from "@/lib/validation";
+import {
+  bookingFormSchema,
+  bookingResponseSchema,
+  type BookingFormValues,
+} from "@/lib/validation";
+
+type BookingConfirmationStatus = "sent" | "test" | "failed";
 
 interface BookingFormProps {
   service: Service;
@@ -22,7 +28,10 @@ const labelClass = "text-sm font-semibold text-ink";
 const errorClass = "mt-1.5 text-sm text-red-600 dark:text-red-400";
 
 export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
-  const [confirmed, setConfirmed] = useState<BookingFormValues | null>(null);
+  const [confirmed, setConfirmed] = useState<{
+    values: BookingFormValues;
+    emailStatus: BookingConfirmationStatus;
+  } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -67,7 +76,12 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
         throw new Error(message);
       }
 
-      setConfirmed(values);
+      const parsedResult = bookingResponseSchema.safeParse(result);
+      if (!parsedResult.success) {
+        throw new Error("The booking response was invalid. Please contact us to confirm your appointment.");
+      }
+
+      setConfirmed({ values, emailStatus: parsedResult.data.confirmationEmail });
     } catch (error) {
       setSubmitError(
         error instanceof Error
@@ -90,13 +104,25 @@ export function BookingForm({ service, date, time, onBack }: BookingFormProps) {
           </em>
         </h2>
         <p className="mt-3 text-muted">
-          Thanks, {confirmed.customerName}. Your {service.name} is booked for{" "}
+          Thanks, {confirmed.values.customerName}. Your {service.name} is booked for{" "}
           <strong className="text-ink">{prettyDate}</strong> at{" "}
           <strong className="text-ink">{time}</strong>.
         </p>
-        <p className="mt-1 text-sm text-muted">
-          We’ll use {confirmed.customerEmail} for your appointment details.
-        </p>
+        {confirmed.emailStatus === "test" ? (
+          <p className="mt-2 text-sm text-amber-700 dark:text-amber-300" role="status">
+            Test mode: a confirmation was sent to the Resend test inbox only. The customer
+            will not receive an email until you verify a sending domain.
+          </p>
+        ) : confirmed.emailStatus === "sent" ? (
+          <p className="mt-1 text-sm text-muted" role="status">
+            A confirmation email was sent to {confirmed.values.customerEmail}.
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-amber-700 dark:text-amber-300" role="status">
+            Your booking was saved, but the confirmation email could not be sent.
+            Please contact us to confirm your appointment.
+          </p>
+        )}
       </section>
     );
   }
